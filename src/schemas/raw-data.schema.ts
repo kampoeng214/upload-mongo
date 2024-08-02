@@ -1,20 +1,16 @@
 // src/schemas/raw-data.schema.ts
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Schema, Document } from 'mongoose';
 
-@Schema()
-export class RawData extends Document {
-  @Prop({ required: true })
+export interface RawData extends Document {
   enodebId: string;
-
-  @Prop({ required: true })
   cellId: string;
-
-  @Prop({ required: true })
   resultTime: Date;
-
-  @Prop({ required: true })
   availDur: number;
 }
 
-export const RawDataSchema = SchemaFactory.createForClass(RawData);
+export const RawDataSchema = new Schema({
+  enodebId: { type: String, required: true },
+  cellId: { type: String, required: true },
+  resultTime: { type: Date, required: true },
+  availDur: { type: Number, required: true },
+});

@@ -3,16 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload CSV</title>
+    <title>Upload CSV and Show Graph</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        .container { width: 80%; margin: 0 auto; padding-top: 20px; }
+        input, button { margin: 5px 0; padding: 10px; }
+        button { cursor: pointer; }
+        canvas { width: 100%; height: 400px; margin-top: 20px; }
+    </style>
 </head>
 <body>
-    <h1>Upload CSV File</h1>
-    <form id="uploadForm">
-        <input type="file" id="fileInput" name="file" accept=".csv" />
-        <button type="submit">Upload</button>
-    </form>
-    <div id="message"></div>
+    <div class="container">
+        <h1>Upload CSV File</h1>
+        <form id="uploadForm">
+            <input type="file" id="fileInput" name="file" accept=".csv" />
+            <button type="submit">Upload</button>
+        </form>
+        <div id="message"></div>
+        
+        <h1>Show Graph</h1>
+        <form id="graphForm">
+            <label for="enodebId">eNodeB ID:</label>
+            <input type="text" id="enodebId" name="enodebId" required />
+            <label for="cellId">Cell ID:</label>
+            <input type="text" id="cellId" name="cellId" required />
+            <label for="startDate">Start Date:</label>
+            <input type="date" id="startDate" name="startDate" required />
+            <label for="endDate">End Date:</label>
+            <input type="date" id="endDate" name="endDate" required />
+            <button type="submit">Get Graph</button>
+        </form>
+        <canvas id="graphCanvas"></canvas>
+    </div>
+
     <script>
+        // Handle CSV Upload
         document.getElementById('uploadForm').addEventListener('submit', async (event) => {
             event.preventDefault();
             const formData = new FormData();
@@ -27,6 +53,51 @@
                 document.getElementById('message').textContent = result.message;
             } catch (error) {
                 document.getElementById('message').textContent = 'Error: ' + error.message;
+            }
+        });
+
+        // Handle Graph Display
+        document.getElementById('graphForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const enodebId = document.getElementById('enodebId').value;
+            const cellId = document.getElementById('cellId').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            try {
+                const response = await fetch(`/csv/graph?enodebId=${enodebId}&cellId=${cellId}&startDate=${startDate}&endDate=${endDate}`);
+                const data = await response.json();
+
+                const labels = data.map(item => new Date(item.resultTime).toLocaleDateString());
+                const values = data.map(item => item.availability);
+
+                const ctx = document.getElementById('graphCanvas').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Availability (%)',
+                            data: values,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                beginAtZero: true
+                            },
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error fetching graph data:', error);
             }
         });
     </script>
