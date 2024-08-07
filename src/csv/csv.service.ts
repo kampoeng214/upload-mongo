@@ -10,7 +10,7 @@ import { RawData } from '../schemas/raw-data.schema';
 export class CsvService {
   constructor(@InjectModel('RawData') private readonly rawDataModel: Model<RawData>) {}
 
-  async parseAndSaveCsv(file: Express.Multer.File): Promise<void> {
+    async parseAndSaveCsv(file: Express.Multer.File): Promise<void> {
     const stream = Readable.from(file.buffer);
     
     return new Promise((resolve, reject) => {
@@ -34,4 +34,20 @@ export class CsvService {
   async getAllData(): Promise<RawData[]> {
     return this.rawDataModel.find().exec();
   }
+
+  async getGraph(enodebId: string, cellId: string, startDate: string, endDate: string): Promise<any> {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      throw new Error('Invalid date format');
+    }
+
+    return this.rawDataModel.find({
+      enodebId,
+      cellId,
+      resultTime: { $gte: start, $lte: end }
+    }).select('resultTime availDur').exec();
+  }
+  
 }

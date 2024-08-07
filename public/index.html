@@ -98,6 +98,7 @@
                 });
             } catch (error) {
                 console.error('Error fetching graph data:', error);
+                document.getElementById('message').textContent = 'Error fetching graph data';
             }
         });
     </script>
